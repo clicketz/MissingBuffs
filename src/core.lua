@@ -1,5 +1,6 @@
 local addonName, ns = ...
 
+-- Upvalues
 local UnitExists = UnitExists
 local UnitIsDeadOrGhost = UnitIsDeadOrGhost
 local UnitCanAssist = UnitCanAssist
@@ -11,20 +12,47 @@ local math_max = math.max
 local math_floor = math.floor
 local strmatch = string.match
 local select = select
+local table_insert = table.insert
 
-local currentScale = 0.4
-local currentOffsetX = 2
-local currentOffsetY = 0
+-- State
+local currentScale
+local currentOffsetX
+local currentOffsetY
+local currentAnchor
+local currentRelativePoint
 
+-- Cache
 local playerClass
 local myBuffSpells
-local displayTexture
+
+-- Function declarations
 local UnitHasMyRaidBuff
 
+ns.indicatorPool = {}
+
 function ns.UpdateSettings()
-    currentScale = ns.db.iconScale or 0.4
-    currentOffsetX = ns.db.offsetX or 2
-    currentOffsetY = ns.db.offsetY or 0
+    currentScale = ns.db.iconScale
+    currentOffsetX = ns.db.offsetX
+    currentOffsetY = ns.db.offsetY
+    currentAnchor = ns.db.anchor
+    currentRelativePoint = ns.db.relativePoint
+
+    for i = 1, #ns.indicatorPool do
+        local indicator = ns.indicatorPool[i]
+
+        indicator:ClearAllPoints()
+        indicator:SetPoint(currentAnchor, indicator.parentFrame, currentRelativePoint, currentOffsetX, currentOffsetY)
+        indicator._currentOffsetX = currentOffsetX
+        indicator._currentOffsetY = currentOffsetY
+        indicator._currentAnchor = currentAnchor
+        indicator._currentRelativePoint = currentRelativePoint
+
+        local iconSize = GetSafeIconSize(indicator.parentFrame)
+        if indicator._currentSize ~= iconSize then
+            indicator:SetSize(iconSize, iconSize)
+            indicator._currentSize = iconSize
+        end
+    end
 end
 
 local function GetSafeIconSize(frame)
@@ -38,6 +66,27 @@ local function GetSafeIconSize(frame)
     end
 
     return math_max(12, math_floor(frame._missingBuffCachedSize or (40 * currentScale)))
+end
+
+function ns.CreateIndicator(frame)
+    local indicator = CreateFrame("Frame", nil, frame)
+    indicator.parentFrame = frame
+
+    -- avoid being hidden behind the normal buffs/debuffs
+    indicator:SetFrameLevel(frame:GetFrameLevel() + 5)
+
+    local border = indicator:CreateTexture(nil, "BACKGROUND")
+    border:SetAllPoints()
+    border:SetColorTexture(0, 0, 0, 1)
+
+    local tex = indicator:CreateTexture(nil, "ARTWORK")
+    tex:SetPoint("TOPLEFT", indicator, "TOPLEFT", 1, -1)
+    tex:SetPoint("BOTTOMRIGHT", indicator, "BOTTOMRIGHT", -1, 1)
+    tex:SetTexture(ns.displayTexture)
+    tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+    table_insert(ns.indicatorPool, indicator)
+    return indicator
 end
 
 local function UpdateAurasHook(frame)
@@ -54,28 +103,18 @@ local function UpdateAurasHook(frame)
     local indicator = frame.MissingBuffIndicator
 
     if not indicator then
-        indicator = CreateFrame("Frame", nil, frame)
-        -- avoid being hidden behind the normal buffs/debuffs
-        indicator:SetFrameLevel(frame:GetFrameLevel() + 5)
-
-        local border = indicator:CreateTexture(nil, "BACKGROUND")
-        border:SetAllPoints()
-        border:SetColorTexture(0, 0, 0, 1)
-
-        local tex = indicator:CreateTexture(nil, "ARTWORK")
-        tex:SetPoint("TOPLEFT", indicator, "TOPLEFT", 1, -1)
-        tex:SetPoint("BOTTOMRIGHT", indicator, "BOTTOMRIGHT", -1, 1)
-        tex:SetTexture(displayTexture)
-        tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-
+        indicator = ns.CreateIndicator(frame)
         frame.MissingBuffIndicator = indicator
     end
 
-    if indicator._currentOffsetX ~= currentOffsetX or indicator._currentOffsetY ~= currentOffsetY then
+    if indicator._currentOffsetX ~= currentOffsetX or indicator._currentOffsetY ~= currentOffsetY
+    or indicator._currentAnchor ~= currentAnchor or indicator._currentRelativePoint ~= currentRelativePoint then
         indicator:ClearAllPoints()
-        indicator:SetPoint("LEFT", frame, "LEFT", currentOffsetX, currentOffsetY)
+        indicator:SetPoint(currentAnchor, frame, currentRelativePoint, currentOffsetX, currentOffsetY)
         indicator._currentOffsetX = currentOffsetX
         indicator._currentOffsetY = currentOffsetY
+        indicator._currentAnchor = currentAnchor
+        indicator._currentRelativePoint = currentRelativePoint
     end
 
     local iconSize = GetSafeIconSize(frame)
@@ -94,14 +133,13 @@ end
 
 local function OnLoad(self, event)
     ns.Config.InitDB()
-    ns.UpdateSettings()
 
     playerClass = select(2, UnitClass("player"))
     myBuffSpells = ns.RAID_BUFFS[playerClass]
 
     if not myBuffSpells then return end
 
-    displayTexture = C_Spell.GetSpellTexture(myBuffSpells[1])
+    ns.displayTexture = C_Spell.GetSpellTexture(myBuffSpells[1])
 
     if playerClass == "EVOKER" then
         -- Blessing of the Bronze applies unique spellids per class
@@ -120,6 +158,8 @@ local function OnLoad(self, event)
             return false
         end
     end
+
+    ns.UpdateSettings()
 
     hooksecurefunc("CompactUnitFrame_UpdateAuras", UpdateAurasHook)
 

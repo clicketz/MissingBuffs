@@ -6,6 +6,8 @@ ns.Config.Defaults = {
     iconScale = 0.4,
     offsetX = 2,
     offsetY = 0,
+    anchor = "LEFT",
+    relativePoint = "LEFT",
 }
 
 function ns.Config.InitDB()

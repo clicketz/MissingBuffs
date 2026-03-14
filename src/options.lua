@@ -16,17 +16,25 @@ function ns.SetupOptions()
     version:SetPoint("TOPLEFT", author, "BOTTOMLEFT", 0, -8)
     version:SetFormattedText("|cFFFF7C0AVersion|r: %s", C_AddOns.GetAddOnMetadata(addonName, "Version"))
 
-    local scaleInput = ns.Libs.CreateNumberInput(panel, "Icon Scale Modifier (Default: 0.4)", "iconScale", ns.UpdateSettings)
+    local scaleInput = ns.Libs.CreateNumberInput(panel, "Icon Scale (Default: 0.4):", "iconScale", 1, ns.UpdateSettings)
     scaleInput:SetPoint("TOPLEFT", version, "BOTTOMLEFT", 10, -30)
 
-    local xInput = ns.Libs.CreateNumberInput(panel, "X Offset (Default: 2)", "offsetX", ns.UpdateSettings)
-    xInput:SetPoint("TOPLEFT", scaleInput, "BOTTOMLEFT", 0, -20)
+    local xInput = ns.Libs.CreateSlider(panel, "X Offset:", "offsetX", -30, 30, 0.1, 1, ns.UpdateSettings)
+    xInput:SetPoint("TOPLEFT", scaleInput, "BOTTOMLEFT", 0, -15)
 
-    local yInput = ns.Libs.CreateNumberInput(panel, "Y Offset (Default: 0)", "offsetY", ns.UpdateSettings)
-    yInput:SetPoint("TOPLEFT", xInput, "BOTTOMLEFT", 0, -20)
+    local yInput = ns.Libs.CreateSlider(panel, "Y Offset:", "offsetY", -30, 30, 0.1, 1, ns.UpdateSettings)
+    yInput:SetPoint("TOPLEFT", xInput, "BOTTOMLEFT", 0, -15)
+
+    local anchors = { "TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT" }
+
+    local anchorInput = ns.Libs.CreateDropdown(panel, "Anchor:", "anchor", anchors, ns.UpdateSettings)
+    anchorInput:SetPoint("TOPLEFT", yInput, "BOTTOMLEFT", 0, -15)
+
+    local relativeInput = ns.Libs.CreateDropdown(panel, "Relative To:", "relativePoint", anchors, ns.UpdateSettings)
+    relativeInput:SetPoint("TOPLEFT", anchorInput, "BOTTOMLEFT", 0, -15)
 
     local helpPanel = CreateFrame("Frame", nil, panel)
-    helpPanel:SetSize(100, 150)
+    helpPanel:SetSize(100, 100)
     helpPanel:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 20, 20)
 
     local helpTitle = helpPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
@@ -49,6 +57,8 @@ function ns.SetupOptions()
     local lastHelp = helpTitle
     lastHelp = AddCommand("/mb", "Open this options menu", lastHelp)
     lastHelp = AddCommand("/missingbuffs", "Alias for /mb", lastHelp)
+
+    ns.CreatePreviewFrame(panel)
 
     local category = Settings.RegisterCanvasLayoutCategory(panel, panel.name)
     category.OnRefresh = function()
