@@ -32,6 +32,7 @@ function ns.Libs.CreateNumberInput(parent, labelText, key, decimalPlaces, update
         local val = ns.db[key]
         if val == nil then val = ns.Config.Defaults[key] or 0 end
         editbox:SetText(string.format(formatStr, val))
+        editbox:SetCursorPosition(0)
     end
 
     container:SetScript("OnShow", function(self)
@@ -103,6 +104,7 @@ function ns.Libs.CreateSlider(parent, labelText, key, minVal, maxVal, step, deci
         isUpdating = true
         slider:SetValue(val)
         editbox:SetText(string.format(formatStr, val))
+        editbox:SetCursorPosition(0)
         isUpdating = false
     end
 
@@ -114,6 +116,7 @@ function ns.Libs.CreateSlider(parent, labelText, key, minVal, maxVal, step, deci
             if value ~= ns.db[key] then
                 ns.db[key] = value
                 editbox:SetText(string.format(formatStr, value))
+                editbox:SetCursorPosition(0)
                 if updateFunc then updateFunc(value) end
             end
         end
@@ -137,6 +140,7 @@ function ns.Libs.CreateSlider(parent, labelText, key, minVal, maxVal, step, deci
         end
 
         self:SetText(string.format(formatStr, ns.db[key]))
+        self:SetCursorPosition(0)
     end
 
     editbox:SetScript("OnEnterPressed", function(self)
@@ -147,6 +151,7 @@ function ns.Libs.CreateSlider(parent, labelText, key, minVal, maxVal, step, deci
 
     editbox:SetScript("OnEscapePressed", function(self)
         self:SetText(string.format(formatStr, ns.db[key]))
+        self:SetCursorPosition(0)
         self:ClearFocus()
     end)
 
@@ -173,6 +178,11 @@ function ns.Libs.CreateDropdown(parent, labelText, key, options, updateFunc)
     dropdown:SetWidth(120)
 
     function container:UpdateValue()
+        local currentVal = ns.db[key]
+        if currentVal == nil then currentVal = ns.Config.Defaults[key] end
+
+        dropdown:SetDefaultText(tostring(currentVal))
+
         dropdown:SetupMenu(function(owner, rootDescription)
             for _, opt in ipairs(options) do
                 rootDescription:CreateRadio(
@@ -185,6 +195,7 @@ function ns.Libs.CreateDropdown(parent, labelText, key, options, updateFunc)
                     function()
                         ns.db[key] = opt
                         if updateFunc then updateFunc(opt) end
+                        dropdown:SetDefaultText(tostring(opt))
                     end
                 )
             end
