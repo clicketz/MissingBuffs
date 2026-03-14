@@ -34,8 +34,8 @@ function ns.SetupOptions()
     relativeInput:SetPoint("TOPLEFT", anchorInput, "BOTTOMLEFT", 0, -15)
 
     local helpPanel = CreateFrame("Frame", nil, panel)
-    helpPanel:SetSize(100, 100)
-    helpPanel:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 20, 20)
+    helpPanel:SetSize(100, 200)
+    helpPanel:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -75, -30)
 
     local helpTitle = helpPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     helpTitle:SetPoint("TOPLEFT", 0, 0)
@@ -58,7 +58,7 @@ function ns.SetupOptions()
     lastHelp = AddCommand("/mb", "Open this options menu", lastHelp)
     lastHelp = AddCommand("/missingbuffs", "Alias for /mb", lastHelp)
 
-    ns.CreatePreviewFrame(panel)
+    ns.CreatePreviewFrame(helpPanel)
 
     local category = Settings.RegisterCanvasLayoutCategory(panel, panel.name)
     category.OnRefresh = function()

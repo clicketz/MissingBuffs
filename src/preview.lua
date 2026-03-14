@@ -23,7 +23,7 @@ end
 
 function ns.CreatePreviewFrame(parent)
     local f = CreateFrame("Frame", "MissingBuffsPreview", parent)
-    f:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -70, -50)
+    f:SetPoint("TOP", parent, "BOTTOM", 0, 0)
     f:SetSize(120, 60)
 
     local border = f:CreateTexture(nil, "BACKGROUND")
