@@ -4,6 +4,8 @@ ns.Config = {}
 
 ns.Config.Defaults = {
     iconScale = 0.4,
+    offsetX = 2,
+    offsetY = 0,
 }
 
 function ns.Config.InitDB()

@@ -10,8 +10,8 @@
 ## AddonCompartmentFuncOnEnter: MissingBuffs_OnCompartmentEnter
 ## AddonCompartmentFuncOnLeave: MissingBuffs_OnCompartmentLeave
 
-constants.lua
-config.lua
-libs.lua
-core.lua
-options.lua
+src\constants.lua
+src\config.lua
+src\libs.lua
+src\core.lua
+src\options.lua

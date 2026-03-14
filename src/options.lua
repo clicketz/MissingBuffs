@@ -16,10 +16,14 @@ function ns.SetupOptions()
     version:SetPoint("TOPLEFT", author, "BOTTOMLEFT", 0, -8)
     version:SetFormattedText("|cFFFF7C0AVersion|r: %s", C_AddOns.GetAddOnMetadata(addonName, "Version"))
 
-    local scaleInput = ns.Libs.CreateNumberInput(panel, "Icon Scale Modifier (Default: 0.4)", "iconScale", function(val)
-        ns.UpdateScale(val)
-    end)
+    local scaleInput = ns.Libs.CreateNumberInput(panel, "Icon Scale Modifier (Default: 0.4)", "iconScale", ns.UpdateSettings)
     scaleInput:SetPoint("TOPLEFT", version, "BOTTOMLEFT", 10, -30)
+
+    local xInput = ns.Libs.CreateNumberInput(panel, "X Offset (Default: 2)", "offsetX", ns.UpdateSettings)
+    xInput:SetPoint("TOPLEFT", scaleInput, "BOTTOMLEFT", 0, -20)
+
+    local yInput = ns.Libs.CreateNumberInput(panel, "Y Offset (Default: 0)", "offsetY", ns.UpdateSettings)
+    yInput:SetPoint("TOPLEFT", xInput, "BOTTOMLEFT", 0, -20)
 
     local helpPanel = CreateFrame("Frame", nil, panel)
     helpPanel:SetSize(100, 150)

@@ -5,6 +5,7 @@ local UnitIsDeadOrGhost = UnitIsDeadOrGhost
 local UnitCanAssist = UnitCanAssist
 local UnitClass = UnitClass
 local GetUnitAuraBySpellID = C_UnitAuras.GetUnitAuraBySpellID
+local InCombatLockdown = InCombatLockdown
 local issecretvalue = issecretvalue
 local math_max = math.max
 local math_floor = math.floor
@@ -12,13 +13,18 @@ local strmatch = string.match
 local select = select
 
 local currentScale = 0.4
+local currentOffsetX = 2
+local currentOffsetY = 0
+
 local playerClass
 local myBuffSpells
 local displayTexture
 local UnitHasMyRaidBuff
 
-function ns.UpdateScale(newScale)
-    currentScale = newScale
+function ns.UpdateSettings()
+    currentScale = ns.db.iconScale or 0.4
+    currentOffsetX = ns.db.offsetX or 2
+    currentOffsetY = ns.db.offsetY or 0
 end
 
 local function GetSafeIconSize(frame)
@@ -45,10 +51,10 @@ local function UpdateAurasHook(frame)
         return
     end
 
-    if not frame.MissingBuffIndicator then
-        local indicator = CreateFrame("Frame", nil, frame)
-        indicator:SetPoint("LEFT", frame, "LEFT", 2, 0)
+    local indicator = frame.MissingBuffIndicator
 
+    if not indicator then
+        indicator = CreateFrame("Frame", nil, frame)
         -- avoid being hidden behind the normal buffs/debuffs
         indicator:SetFrameLevel(frame:GetFrameLevel() + 5)
 
@@ -65,23 +71,30 @@ local function UpdateAurasHook(frame)
         frame.MissingBuffIndicator = indicator
     end
 
+    if indicator._currentOffsetX ~= currentOffsetX or indicator._currentOffsetY ~= currentOffsetY then
+        indicator:ClearAllPoints()
+        indicator:SetPoint("LEFT", frame, "LEFT", currentOffsetX, currentOffsetY)
+        indicator._currentOffsetX = currentOffsetX
+        indicator._currentOffsetY = currentOffsetY
+    end
+
     local iconSize = GetSafeIconSize(frame)
 
-    if frame.MissingBuffIndicator._currentSize ~= iconSize then
-        frame.MissingBuffIndicator:SetSize(iconSize, iconSize)
-        frame.MissingBuffIndicator._currentSize = iconSize
+    if indicator._currentSize ~= iconSize then
+        indicator:SetSize(iconSize, iconSize)
+        indicator._currentSize = iconSize
     end
 
     if not UnitHasMyRaidBuff(unit) then
-        frame.MissingBuffIndicator:Show()
+        indicator:Show()
     else
-        frame.MissingBuffIndicator:Hide()
+        indicator:Hide()
     end
 end
 
 local function OnLoad(self, event)
     ns.Config.InitDB()
-    currentScale = ns.db.iconScale
+    ns.UpdateSettings()
 
     playerClass = select(2, UnitClass("player"))
     myBuffSpells = ns.RAID_BUFFS[playerClass]
