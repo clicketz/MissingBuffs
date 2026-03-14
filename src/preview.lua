@@ -15,16 +15,15 @@ local function UpdatePreviewState(f)
         end
     end
 
-    f:SetSize(width, height)
     f:SetScale(scale)
+    PixelUtil.SetSize(f, width, height)
 
     ns.UpdateSettings()
 end
 
 function ns.CreatePreviewFrame(parent)
     local f = CreateFrame("Frame", "MissingBuffsPreview", parent)
-    f:SetPoint("TOP", parent, "BOTTOM", 0, 0)
-    f:SetSize(120, 60)
+    PixelUtil.SetPoint(f, "TOP", parent, "BOTTOM", 0, 0)
 
     local border = f:CreateTexture(nil, "BACKGROUND")
     border:SetAllPoints()
