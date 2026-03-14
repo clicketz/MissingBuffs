@@ -1,2 +1,2 @@
 # MissingBuffs
-Shows an icon on the raid frame if anybody in your group is missing your current class raid buff
+A lightweight addon that flags raid members missing your primary raid buff directly on the Blizzard Compact Raid Frames.

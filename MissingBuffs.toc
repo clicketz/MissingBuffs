@@ -1,0 +1,17 @@
+## Interface: 120001
+## Title: MissingBuffs
+## Notes: Indicates missing raid buffs on the default raid frames
+## Author: clicket
+## Version: @project-version@
+
+## SavedVariables: MissingBuffsDB
+
+## AddonCompartmentFunc: MissingBuffs_OpenOptions
+## AddonCompartmentFuncOnEnter: MissingBuffs_OnCompartmentEnter
+## AddonCompartmentFuncOnLeave: MissingBuffs_OnCompartmentLeave
+
+constants.lua
+config.lua
+libs.lua
+core.lua
+options.lua
