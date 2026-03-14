@@ -30,6 +30,19 @@ local UnitHasMyRaidBuff
 
 ns.indicatorPool = {}
 
+local function GetSafeIconSize(frame)
+    local height = frame:GetHeight()
+
+    -- frames can return secret values for dimensions
+    if not issecretvalue(height) then
+        local result = height * currentScale
+        frame._missingBuffCachedSize = result
+        return math_max(12, math_floor(result))
+    end
+
+    return math_max(12, math_floor(frame._missingBuffCachedSize or (40 * currentScale)))
+end
+
 function ns.UpdateSettings()
     currentScale = ns.db.iconScale
     currentOffsetX = ns.db.offsetX
@@ -53,19 +66,6 @@ function ns.UpdateSettings()
             indicator._currentSize = iconSize
         end
     end
-end
-
-local function GetSafeIconSize(frame)
-    local height = frame:GetHeight()
-
-    -- frames can return secret values for dimensions
-    if not issecretvalue(height) then
-        local result = height * currentScale
-        frame._missingBuffCachedSize = result
-        return math_max(12, math_floor(result))
-    end
-
-    return math_max(12, math_floor(frame._missingBuffCachedSize or (40 * currentScale)))
 end
 
 function ns.CreateIndicator(frame)
