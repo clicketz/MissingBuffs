@@ -2,8 +2,10 @@
 ## Title: MissingBuffs
 ## Notes: Indicates missing raid buffs on the default raid frames
 ## Author: clicket
-## IconTexture: Interface\Icons\spell_nature_regeneration
 ## Version: @project-version@
+## X-Website: https://github.com/clicketz/MissingBuffs
+## X-Curse-Project-ID: 1486237
+## IconTexture: Interface\Icons\spell_nature_regeneration
 
 ## SavedVariables: MissingBuffsDB
 
