@@ -16,7 +16,7 @@ function ns.SetupOptions()
     version:SetPoint("TOPLEFT", author, "BOTTOMLEFT", 0, -8)
     version:SetFormattedText("|cFFFF7C0AVersion|r: %s", C_AddOns.GetAddOnMetadata(addonName, "Version"))
 
-    local scaleInput = ns.Libs.CreateNumberInput(panel, "Icon Scale (Default: 0.4):", "iconScale", 1, ns.UpdateSettings)
+    local scaleInput = ns.Libs.CreateNumberInput(panel, "Icon Scale (Default: 0.4):", "iconScale", 2, ns.UpdateSettings)
     scaleInput:SetPoint("TOPLEFT", version, "BOTTOMLEFT", 10, -30)
 
     local xInput = ns.Libs.CreateSlider(panel, "X Offset:", "offsetX", -30, 30, 0.1, 1, ns.UpdateSettings)
