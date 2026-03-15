@@ -137,9 +137,14 @@ local function OnLoad(self, event)
     playerClass = select(2, UnitClass("player"))
     myBuffSpells = ns.RAID_BUFFS[playerClass]
 
-    if not myBuffSpells then return end
+    ns.displayTexture = C_Spell.GetSpellTexture(myBuffSpells and myBuffSpells[1] or 403197)
 
-    ns.displayTexture = C_Spell.GetSpellTexture(myBuffSpells[1])
+    ns.UpdateSettings()
+    ns.SetupOptions()
+    ns.SetupSlashHandler()
+
+    -- if the player's class doesn't have any buffs we care about, there's no point in wasting cycles
+    if not myBuffSpells then return end
 
     if playerClass == "EVOKER" then
         -- Blessing of the Bronze applies unique spellids per class
@@ -159,14 +164,7 @@ local function OnLoad(self, event)
         end
     end
 
-    ns.UpdateSettings()
-
     hooksecurefunc("CompactUnitFrame_UpdateAuras", UpdateAurasHook)
-
-    ns.SetupOptions()
-    ns.SetupSlashHandler()
-
-    self:UnregisterEvent("PLAYER_LOGIN")
 end
 
 local loader = CreateFrame("Frame")
