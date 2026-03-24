@@ -92,7 +92,7 @@ end
 local function UpdateAurasHook(frame)
     local unit = frame.unit
 
-    if not unit or strmatch(unit, "^nameplate") or strmatch(unit, "pet") then return end
+    if not unit or strmatch(unit, "target") or strmatch(unit, "^nameplate") or strmatch(unit, "pet") then return end
     if not UnitExists(unit) then return end
 
     if UnitIsDeadOrGhost(unit) or not UnitCanAssist("player", unit) then
