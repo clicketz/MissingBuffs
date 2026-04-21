@@ -89,7 +89,7 @@ function ns.CreateIndicator(frame)
     return indicator
 end
 
-local function UpdateAurasHook(frame)
+local function UpdateIndicator(frame)
     local unit = frame.unit
 
     if not unit or strmatch(unit, "target") or strmatch(unit, "^nameplate") or strmatch(unit, "pet") then return end
@@ -131,6 +131,26 @@ local function UpdateAurasHook(frame)
     end
 end
 
+local function UpdateIndicatorsForUnit(unit)
+    for i = 1, #ns.indicatorPool do
+        local indicator = ns.indicatorPool[i]
+        local frame = indicator.parentFrame
+        if frame and frame:IsVisible() and (frame.unit == unit or frame.displayedUnit == unit) then
+            UpdateIndicator(frame)
+        end
+    end
+end
+
+local function UpdateAllIndicators()
+    for i = 1, #ns.indicatorPool do
+        local indicator = ns.indicatorPool[i]
+        local frame = indicator.parentFrame
+        if frame and frame:IsVisible() then
+            UpdateIndicator(frame)
+        end
+    end
+end
+
 local function OnLoad(self, event)
     ns.Config.InitDB()
 
@@ -164,12 +184,25 @@ local function OnLoad(self, event)
         end
     end
 
-    hooksecurefunc("CompactUnitFrame_UpdateAuras", UpdateAurasHook)
+    hooksecurefunc("CompactUnitFrame_UpdateAll", UpdateIndicator)
+
+    self:RegisterEvent("UNIT_AURA")
+    self:RegisterEvent("GROUP_ROSTER_UPDATE")
+    self:RegisterEvent("PLAYER_ENTERING_WORLD")
 end
 
 local loader = CreateFrame("Frame")
 loader:RegisterEvent("PLAYER_LOGIN")
-loader:SetScript("OnEvent", OnLoad)
+loader:SetScript("OnEvent", function(self, event, ...)
+    if event == "PLAYER_LOGIN" then
+        OnLoad(self, event)
+    elseif event == "UNIT_AURA" then
+        local unit = ...
+        UpdateIndicatorsForUnit(unit)
+    elseif event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_ENTERING_WORLD" then
+        UpdateAllIndicators()
+    end
+end)
 
 function MissingBuffs_OpenOptions()
     if InCombatLockdown() then

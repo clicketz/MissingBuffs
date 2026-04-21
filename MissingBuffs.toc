@@ -1,4 +1,4 @@
-## Interface: 120001
+## Interface: 120005
 ## Title: MissingBuffs
 ## Notes: Indicates missing raid buffs on the default raid frames
 ## Author: clicket
