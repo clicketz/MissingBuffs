@@ -90,6 +90,8 @@ function ns.CreateIndicator(frame)
 end
 
 local function UpdateIndicator(frame)
+    if frame.isPreviewFrame then return end
+
     local unit = frame.unit
     local displayedUnit = frame.displayedUnit
 
@@ -168,8 +170,9 @@ end
 local function UpdateAllIndicators()
     for i = 1, #ns.indicatorPool do
         local indicator = ns.indicatorPool[i]
-        if indicator.parentFrame:IsVisible() then
-            UpdateIndicator(indicator.parentFrame)
+        local frame = indicator.parentFrame
+        if not frame.isPreviewFrame and frame:IsVisible() then
+            UpdateIndicator(frame)
         end
     end
 end
