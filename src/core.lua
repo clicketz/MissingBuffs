@@ -6,13 +6,12 @@ local UnitIsDeadOrGhost = UnitIsDeadOrGhost
 local UnitCanAssist = UnitCanAssist
 local UnitClass = UnitClass
 local GetUnitAuraBySpellID = C_UnitAuras.GetUnitAuraBySpellID
-local InCombatLockdown = InCombatLockdown
 local issecretvalue = issecretvalue
 local math_max = math.max
 local math_floor = math.floor
 local strmatch = string.match
 local select = select
-local table_insert = table.insert
+local pairs = pairs
 
 -- State
 local currentScale
@@ -29,6 +28,7 @@ local myBuffSpells
 local UnitHasMyRaidBuff
 
 ns.indicatorPool = {}
+ns.unitRegistry = {}
 
 local function GetSafeIconSize(frame)
     local height = frame:GetHeight()
@@ -85,26 +85,49 @@ function ns.CreateIndicator(frame)
     tex:SetTexture(ns.displayTexture)
     tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
-    table_insert(ns.indicatorPool, indicator)
+    table.insert(ns.indicatorPool, indicator)
     return indicator
 end
 
 local function UpdateIndicator(frame)
     local unit = frame.unit
+    local displayedUnit = frame.displayedUnit
 
-    if not unit or strmatch(unit, "target") or strmatch(unit, "^nameplate") or strmatch(unit, "pet") then return end
-    if not UnitExists(unit) then return end
-
-    if UnitIsDeadOrGhost(unit) or not UnitCanAssist("player", unit) then
-        if frame.MissingBuffIndicator then frame.MissingBuffIndicator:Hide() end
-        return
-    end
+    if unit and (strmatch(unit, "target") or strmatch(unit, "^nameplate") or strmatch(unit, "pet")) then return end
 
     local indicator = frame.MissingBuffIndicator
 
     if not indicator then
+        if not UnitExists(unit) then return end
         indicator = ns.CreateIndicator(frame)
         frame.MissingBuffIndicator = indicator
+    end
+
+    if indicator._lastUnit ~= unit then
+        if indicator._lastUnit then
+            ns.unitRegistry[indicator._lastUnit][indicator] = nil
+        end
+        if unit then
+            ns.unitRegistry[unit] = ns.unitRegistry[unit] or {}
+            ns.unitRegistry[unit][indicator] = true
+        end
+        indicator._lastUnit = unit
+    end
+
+    if indicator._lastDisplayedUnit ~= displayedUnit then
+        if indicator._lastDisplayedUnit then
+            ns.unitRegistry[indicator._lastDisplayedUnit][indicator] = nil
+        end
+        if displayedUnit then
+            ns.unitRegistry[displayedUnit] = ns.unitRegistry[displayedUnit] or {}
+            ns.unitRegistry[displayedUnit][indicator] = true
+        end
+        indicator._lastDisplayedUnit = displayedUnit
+    end
+
+    if not UnitExists(unit) or UnitIsDeadOrGhost(unit) or not UnitCanAssist("player", unit) then
+        indicator:Hide()
+        return
     end
 
     if indicator._currentOffsetX ~= currentOffsetX or indicator._currentOffsetY ~= currentOffsetY
@@ -132,11 +155,12 @@ local function UpdateIndicator(frame)
 end
 
 local function UpdateIndicatorsForUnit(unit)
-    for i = 1, #ns.indicatorPool do
-        local indicator = ns.indicatorPool[i]
-        local frame = indicator.parentFrame
-        if frame and frame:IsVisible() and (frame.unit == unit or frame.displayedUnit == unit) then
-            UpdateIndicator(frame)
+    local registry = ns.unitRegistry[unit]
+    if registry then
+        for indicator in pairs(registry) do
+            if indicator.parentFrame:IsVisible() then
+                UpdateIndicator(indicator.parentFrame)
+            end
         end
     end
 end
@@ -144,9 +168,8 @@ end
 local function UpdateAllIndicators()
     for i = 1, #ns.indicatorPool do
         local indicator = ns.indicatorPool[i]
-        local frame = indicator.parentFrame
-        if frame and frame:IsVisible() then
-            UpdateIndicator(frame)
+        if indicator.parentFrame:IsVisible() then
+            UpdateIndicator(indicator.parentFrame)
         end
     end
 end
@@ -195,13 +218,12 @@ end
 
 local loader = CreateFrame("Frame")
 loader:RegisterEvent("PLAYER_LOGIN")
-loader:SetScript("OnEvent", function(self, event, ...)
+loader:SetScript("OnEvent", function(self, event, unit)
     if event == "PLAYER_LOGIN" then
         OnLoad(self, event)
     elseif event == "UNIT_AURA" then
-        local unit = ...
         UpdateIndicatorsForUnit(unit)
-    elseif event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_REGEN_ENABLED" then
+    else
         UpdateAllIndicators()
     end
 end)
