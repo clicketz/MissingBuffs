@@ -192,14 +192,23 @@ local function OnLoad(self, event)
     -- if the player's class doesn't have any buffs we care about, there's no point in wasting cycles
     if not myBuffSpells then return end
 
+    ns.allMyBuffSpells = {}
+
     if playerClass == "EVOKER" then
-        -- Blessing of the Bronze applies unique spellids per class
+        for _, spellID in pairs(ns.EVOKER_AURA_MAP) do
+            ns.allMyBuffSpells[spellID] = true
+        end
+
         UnitHasMyRaidBuff = function(unit)
             local targetClass = select(2, UnitClass(unit))
             local spellID = ns.EVOKER_AURA_MAP[targetClass]
             return spellID and GetUnitAuraBySpellID(unit, spellID) ~= nil
         end
     else
+        for i = 1, #myBuffSpells do
+            ns.allMyBuffSpells[myBuffSpells[i]] = true
+        end
+
         UnitHasMyRaidBuff = function(unit)
             for i = 1, #myBuffSpells do
                 if GetUnitAuraBySpellID(unit, myBuffSpells[i]) then
