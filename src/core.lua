@@ -84,6 +84,9 @@ function ns.CreateIndicator(frame)
     tex:SetTexture(ns.displayTexture)
     tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
+    indicator._isShown = false
+    indicator._isValid = false
+
     table.insert(ns.indicatorPool, indicator)
     return indicator
 end
@@ -126,9 +129,18 @@ local function UpdateIndicator(frame)
         indicator._lastDisplayedUnit = displayedUnit
     end
 
-    if not UnitExists(unit) or UnitIsDeadOrGhost(unit) or not UnitCanAssist("player", unit) then
+    local hasBuff, auraInstanceID = false, nil
+    if UnitExists(unit) then
+        hasBuff, auraInstanceID = UnitHasMyRaidBuff(unit)
+    end
+    indicator.auraInstanceID = auraInstanceID
+
+    local isValid = IsUnitValid(unit)
+    indicator._isValid = isValid
+
+    if not isValid then
         indicator:Hide()
-        indicator.auraInstanceID = nil
+        indicator._isShown = false
         return
     end
 
@@ -149,13 +161,12 @@ local function UpdateIndicator(frame)
         indicator._currentSize = iconSize
     end
 
-    local hasBuff, auraInstanceID = UnitHasMyRaidBuff(unit)
-    indicator.auraInstanceID = auraInstanceID
-
     if not hasBuff then
         indicator:Show()
+        indicator._isShown = true
     else
         indicator:Hide()
+        indicator._isShown = false
     end
 end
 
@@ -163,38 +174,42 @@ local function OnUnitAura(unitTarget, updateInfo)
     local registry = ns.unitRegistry[unitTarget]
     if not registry then return end
 
-    local needsUpdate = false
+    local needsFullUpdate = not updateInfo or updateInfo.isFullUpdate
 
-    if updateInfo then
-        if updateInfo.isFullUpdate then
-            needsUpdate = true
-        else
-            if updateInfo.addedAuras then
-                for _, aura in pairs(updateInfo.addedAuras) do
-                    if not issecretvalue(aura.spellId) and ns.allMyBuffSpells[aura.spellId] then
-                        needsUpdate = true
-                        break
-                    end
-                end
-            end
-
-            if not needsUpdate and updateInfo.removedAuraInstanceIDs then
-                for _, auraInstanceID in pairs(updateInfo.removedAuraInstanceIDs) do
-                    for indicator in pairs(registry) do
-                        if indicator.auraInstanceID == auraInstanceID then
-                            needsUpdate = true
-                            break
-                        end
-                    end
-                    if needsUpdate then break end
+    if not needsFullUpdate then
+        if updateInfo.addedAuras then
+            for _, aura in ipairs(updateInfo.addedAuras) do
+                if not issecretvalue(aura.spellId) and ns.allMyBuffSpells[aura.spellId] then
+                    needsFullUpdate = true
+                    break
                 end
             end
         end
-    else
-        needsUpdate = true
+
+        if not needsFullUpdate and updateInfo.removedAuraInstanceIDs then
+            for _, auraInstanceID in ipairs(updateInfo.removedAuraInstanceIDs) do
+                for indicator in pairs(registry) do
+                    if indicator.auraInstanceID == auraInstanceID then
+                        needsFullUpdate = true
+                        break
+                    end
+                end
+                if needsFullUpdate then break end
+            end
+        end
+
+        if not needsFullUpdate then
+            local currentValid = IsUnitValid(unitTarget)
+            for indicator in pairs(registry) do
+                if indicator._isValid ~= currentValid then
+                    needsFullUpdate = true
+                    break
+                end
+            end
+        end
     end
 
-    if needsUpdate then
+    if needsFullUpdate then
         for indicator in pairs(registry) do
             if indicator.parentFrame:IsVisible() then
                 UpdateIndicator(indicator.parentFrame)
