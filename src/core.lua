@@ -31,11 +31,11 @@ local function GetSafeIconSize(frame)
     -- frames can return secret values for dimensions
     if not issecretvalue(height) then
         local result = height * currentScale
-        frame._missingBuffCachedSize = result
+        frame.missingBuffCachedSize = result
         return math.max(12, math.floor(result))
     end
 
-    return math.max(12, math.floor(frame._missingBuffCachedSize or (40 * currentScale)))
+    return math.max(12, math.floor(frame.missingBuffCachedSize or (40 * currentScale)))
 end
 
 local function IsUnitValid(unit)
@@ -54,15 +54,15 @@ function ns.UpdateSettings()
 
         indicator:ClearAllPoints()
         indicator:SetPoint(currentAnchor, indicator.parentFrame, currentRelativePoint, currentOffsetX, currentOffsetY)
-        indicator._currentOffsetX = currentOffsetX
-        indicator._currentOffsetY = currentOffsetY
-        indicator._currentAnchor = currentAnchor
-        indicator._currentRelativePoint = currentRelativePoint
+        indicator.currentOffsetX = currentOffsetX
+        indicator.currentOffsetY = currentOffsetY
+        indicator.currentAnchor = currentAnchor
+        indicator.currentRelativePoint = currentRelativePoint
 
         local iconSize = GetSafeIconSize(indicator.parentFrame)
-        if indicator._currentSize ~= iconSize then
+        if indicator.currentSize ~= iconSize then
             indicator:SetSize(iconSize, iconSize)
-            indicator._currentSize = iconSize
+            indicator.currentSize = iconSize
         end
     end
 end
@@ -84,8 +84,8 @@ function ns.CreateIndicator(frame)
     tex:SetTexture(ns.displayTexture)
     tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
-    indicator._isShown = false
-    indicator._isValid = false
+    indicator.isShown = false
+    indicator.isValid = false
 
     table.insert(ns.indicatorPool, indicator)
     return indicator
@@ -107,26 +107,26 @@ local function UpdateIndicator(frame)
         frame.MissingBuffIndicator = indicator
     end
 
-    if indicator._lastUnit ~= unit then
-        if indicator._lastUnit then
-            ns.unitRegistry[indicator._lastUnit][indicator] = nil
+    if indicator.lastUnit ~= unit then
+        if indicator.lastUnit then
+            ns.unitRegistry[indicator.lastUnit][indicator] = nil
         end
         if unit then
             ns.unitRegistry[unit] = ns.unitRegistry[unit] or {}
             ns.unitRegistry[unit][indicator] = true
         end
-        indicator._lastUnit = unit
+        indicator.lastUnit = unit
     end
 
-    if indicator._lastDisplayedUnit ~= displayedUnit then
-        if indicator._lastDisplayedUnit then
-            ns.unitRegistry[indicator._lastDisplayedUnit][indicator] = nil
+    if indicator.lastDisplayedUnit ~= displayedUnit then
+        if indicator.lastDisplayedUnit then
+            ns.unitRegistry[indicator.lastDisplayedUnit][indicator] = nil
         end
         if displayedUnit then
             ns.unitRegistry[displayedUnit] = ns.unitRegistry[displayedUnit] or {}
             ns.unitRegistry[displayedUnit][indicator] = true
         end
-        indicator._lastDisplayedUnit = displayedUnit
+        indicator.lastDisplayedUnit = displayedUnit
     end
 
     local hasBuff, auraInstanceID = false, nil
@@ -136,37 +136,37 @@ local function UpdateIndicator(frame)
     indicator.auraInstanceID = auraInstanceID
 
     local isValid = IsUnitValid(unit)
-    indicator._isValid = isValid
+    indicator.isValid = isValid
 
     if not isValid then
         indicator:Hide()
-        indicator._isShown = false
+        indicator.isShown = false
         return
     end
 
-    if indicator._currentOffsetX ~= currentOffsetX or indicator._currentOffsetY ~= currentOffsetY
-    or indicator._currentAnchor ~= currentAnchor or indicator._currentRelativePoint ~= currentRelativePoint then
+    if indicator.currentOffsetX ~= currentOffsetX or indicator.currentOffsetY ~= currentOffsetY
+    or indicator.currentAnchor ~= currentAnchor or indicator.currentRelativePoint ~= currentRelativePoint then
         indicator:ClearAllPoints()
         indicator:SetPoint(currentAnchor, frame, currentRelativePoint, currentOffsetX, currentOffsetY)
-        indicator._currentOffsetX = currentOffsetX
-        indicator._currentOffsetY = currentOffsetY
-        indicator._currentAnchor = currentAnchor
-        indicator._currentRelativePoint = currentRelativePoint
+        indicator.currentOffsetX = currentOffsetX
+        indicator.currentOffsetY = currentOffsetY
+        indicator.currentAnchor = currentAnchor
+        indicator.currentRelativePoint = currentRelativePoint
     end
 
     local iconSize = GetSafeIconSize(frame)
 
-    if indicator._currentSize ~= iconSize then
+    if indicator.currentSize ~= iconSize then
         indicator:SetSize(iconSize, iconSize)
-        indicator._currentSize = iconSize
+        indicator.currentSize = iconSize
     end
 
     if not hasBuff then
         indicator:Show()
-        indicator._isShown = true
+        indicator.isShown = true
     else
         indicator:Hide()
-        indicator._isShown = false
+        indicator.isShown = false
     end
 end
 
@@ -201,7 +201,7 @@ local function OnUnitAura(unitTarget, updateInfo)
         if not needsFullUpdate then
             local currentValid = IsUnitValid(unitTarget)
             for indicator in pairs(registry) do
-                if indicator._isValid ~= currentValid then
+                if indicator.isValid ~= currentValid then
                     needsFullUpdate = true
                     break
                 end
