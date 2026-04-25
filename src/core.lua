@@ -6,12 +6,7 @@ local UnitIsDeadOrGhost = UnitIsDeadOrGhost
 local UnitCanAssist = UnitCanAssist
 local UnitClass = UnitClass
 local GetUnitAuraBySpellID = C_UnitAuras.GetUnitAuraBySpellID
-local issecretvalue = issecretvalue
-local math_max = math.max
-local math_floor = math.floor
-local strmatch = string.match
-local select = select
-local pairs = pairs
+local issecretvalue = issecretvalue or function() return false end
 
 -- State
 local currentScale
@@ -37,10 +32,10 @@ local function GetSafeIconSize(frame)
     if not issecretvalue(height) then
         local result = height * currentScale
         frame._missingBuffCachedSize = result
-        return math_max(12, math_floor(result))
+        return math.max(12, math.floor(result))
     end
 
-    return math_max(12, math_floor(frame._missingBuffCachedSize or (40 * currentScale)))
+    return math.max(12, math.floor(frame._missingBuffCachedSize or (40 * currentScale)))
 end
 
 function ns.UpdateSettings()
@@ -95,7 +90,7 @@ local function UpdateIndicator(frame)
     local unit = frame.unit
     local displayedUnit = frame.displayedUnit
 
-    if unit and (strmatch(unit, "target") or strmatch(unit, "^nameplate") or strmatch(unit, "pet")) then return end
+    if unit and (string.match(unit, "target") or string.match(unit, "^nameplate") or string.match(unit, "pet")) then return end
 
     local indicator = frame.MissingBuffIndicator
 
@@ -129,6 +124,7 @@ local function UpdateIndicator(frame)
 
     if not UnitExists(unit) or UnitIsDeadOrGhost(unit) or not UnitCanAssist("player", unit) then
         indicator:Hide()
+        indicator.auraInstanceID = nil
         return
     end
 
@@ -149,16 +145,52 @@ local function UpdateIndicator(frame)
         indicator._currentSize = iconSize
     end
 
-    if not UnitHasMyRaidBuff(unit) then
+    local hasBuff, auraInstanceID = UnitHasMyRaidBuff(unit)
+    indicator.auraInstanceID = auraInstanceID
+
+    if not hasBuff then
         indicator:Show()
     else
         indicator:Hide()
     end
 end
 
-local function UpdateIndicatorsForUnit(unit)
-    local registry = ns.unitRegistry[unit]
-    if registry then
+local function OnUnitAura(unitTarget, updateInfo)
+    local registry = ns.unitRegistry[unitTarget]
+    if not registry then return end
+
+    local needsUpdate = false
+
+    if updateInfo then
+        if updateInfo.isFullUpdate then
+            needsUpdate = true
+        else
+            if updateInfo.addedAuras then
+                for _, aura in pairs(updateInfo.addedAuras) do
+                    if not issecretvalue(aura.spellId) and ns.allMyBuffSpells[aura.spellId] then
+                        needsUpdate = true
+                        break
+                    end
+                end
+            end
+
+            if not needsUpdate and updateInfo.removedAuraInstanceIDs then
+                for _, auraInstanceID in pairs(updateInfo.removedAuraInstanceIDs) do
+                    for indicator in pairs(registry) do
+                        if indicator.auraInstanceID == auraInstanceID then
+                            needsUpdate = true
+                            break
+                        end
+                    end
+                    if needsUpdate then break end
+                end
+            end
+        end
+    else
+        needsUpdate = true
+    end
+
+    if needsUpdate then
         for indicator in pairs(registry) do
             if indicator.parentFrame:IsVisible() then
                 UpdateIndicator(indicator.parentFrame)
@@ -202,7 +234,8 @@ local function OnLoad(self, event)
         UnitHasMyRaidBuff = function(unit)
             local targetClass = select(2, UnitClass(unit))
             local spellID = ns.EVOKER_AURA_MAP[targetClass]
-            return spellID and GetUnitAuraBySpellID(unit, spellID) ~= nil
+            local aura = spellID and GetUnitAuraBySpellID(unit, spellID)
+            return aura ~= nil, aura and aura.auraInstanceID
         end
     else
         for i = 1, #myBuffSpells do
@@ -211,11 +244,12 @@ local function OnLoad(self, event)
 
         UnitHasMyRaidBuff = function(unit)
             for i = 1, #myBuffSpells do
-                if GetUnitAuraBySpellID(unit, myBuffSpells[i]) then
-                    return true
+                local aura = GetUnitAuraBySpellID(unit, myBuffSpells[i])
+                if aura then
+                    return true, aura.auraInstanceID
                 end
             end
-            return false
+            return false, nil
         end
     end
 
@@ -230,11 +264,11 @@ end
 
 local loader = CreateFrame("Frame")
 loader:RegisterEvent("PLAYER_LOGIN")
-loader:SetScript("OnEvent", function(self, event, unit)
+loader:SetScript("OnEvent", function(self, event, ...)
     if event == "PLAYER_LOGIN" then
         OnLoad(self, event)
     elseif event == "UNIT_AURA" then
-        UpdateIndicatorsForUnit(unit)
+        OnUnitAura(...)
     else
         UpdateAllIndicators()
     end
