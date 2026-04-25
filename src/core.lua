@@ -38,6 +38,10 @@ local function GetSafeIconSize(frame)
     return math.max(12, math.floor(frame._missingBuffCachedSize or (40 * currentScale)))
 end
 
+local function IsUnitValid(unit)
+    return UnitExists(unit) and not UnitIsDeadOrGhost(unit) and UnitCanAssist("player", unit)
+end
+
 function ns.UpdateSettings()
     currentScale = ns.db.iconScale
     currentOffsetX = ns.db.offsetX
