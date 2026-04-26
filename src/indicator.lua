@@ -113,18 +113,23 @@ function ns.IndicatorMixin:Update()
     end
 end
 
+function ns.CreateIndicator(frame)
+    local indicator = CreateFrame("Frame", nil, frame)
+    Mixin(indicator, ns.IndicatorMixin)
+    indicator:OnLoad(frame)
+
+    frame.MissingBuffIndicator = indicator
+    table.insert(ns.indicatorPool, indicator)
+
+    return indicator
+end
+
 function ns.GetIndicator(frame)
     local indicator = frame.MissingBuffIndicator
 
     if not indicator then
         if not UnitExists(frame.unit) then return nil end
-
-        indicator = CreateFrame("Frame", nil, frame)
-        Mixin(indicator, ns.IndicatorMixin)
-        indicator:OnLoad(frame)
-
-        frame.MissingBuffIndicator = indicator
-        table.insert(ns.indicatorPool, indicator)
+        indicator = ns.CreateIndicator(frame)
     end
 
     return indicator
