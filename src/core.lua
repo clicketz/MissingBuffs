@@ -98,8 +98,8 @@ local function OnLoad(self, event)
     self:RegisterEvent("UNIT_AURA")
     self:RegisterEvent("GROUP_ROSTER_UPDATE")
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self:RegisterEvent("PLAYER_REGEN_DISABLED")
-    self:RegisterEvent("PLAYER_REGEN_ENABLED")
+    -- self:RegisterEvent("PLAYER_REGEN_DISABLED")
+    -- self:RegisterEvent("PLAYER_REGEN_ENABLED")
 end
 
 local loader = CreateFrame("Frame")
