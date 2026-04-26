@@ -16,6 +16,7 @@
 src\constants.lua
 src\config.lua
 src\libs.lua
+src\indicator.lua
 src\core.lua
 src\preview.lua
 src\options.lua
