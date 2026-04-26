@@ -79,20 +79,14 @@ local function OnUnitAura(unitTarget, updateInfo)
 
     if needsFullUpdate then
         for indicator in pairs(registry) do
-            if indicator.parentFrame:IsVisible() then
-                indicator:Update()
-            end
+            indicator:Update()
         end
     end
 end
 
 local function UpdateAllIndicators()
     for i = 1, #ns.indicatorPool do
-        local indicator = ns.indicatorPool[i]
-        local frame = indicator.parentFrame
-        if frame:IsVisible() then
-            UpdateIndicator(frame)
-        end
+        UpdateIndicator(ns.indicatorPool[i].parentFrame)
     end
 end
 
@@ -110,8 +104,6 @@ local function OnLoad(self, event)
     self:RegisterEvent("UNIT_AURA")
     self:RegisterEvent("GROUP_ROSTER_UPDATE")
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    -- self:RegisterEvent("PLAYER_REGEN_DISABLED")
-    -- self:RegisterEvent("PLAYER_REGEN_ENABLED")
 end
 
 local loader = CreateFrame("Frame")
