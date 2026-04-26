@@ -21,6 +21,18 @@ function ns.UpdateSettings()
 end
 
 local function UpdateIndicator(frame)
+    if frame:IsForbidden() or frame.isPreviewFrame then return end
+
+    local unit = frame.unit
+
+    if unit and (string.match(unit, "target") or string.match(unit, "^nameplate") or string.match(unit, "pet")) then
+        if frame.MissingBuffIndicator then
+            frame.MissingBuffIndicator:Hide()
+            frame.MissingBuffIndicator.isShown = false
+        end
+        return
+    end
+
     local indicator = ns.GetIndicator(frame)
     if indicator then
         indicator:Update()
@@ -78,8 +90,9 @@ end
 local function UpdateAllIndicators()
     for i = 1, #ns.indicatorPool do
         local indicator = ns.indicatorPool[i]
-        if not indicator.parentFrame.isPreviewFrame and indicator.parentFrame:IsVisible() then
-            indicator:Update()
+        local frame = indicator.parentFrame
+        if frame:IsVisible() then
+            UpdateIndicator(frame)
         end
     end
 end

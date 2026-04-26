@@ -58,12 +58,8 @@ function ns.IndicatorMixin:UpdateLayout()
 end
 
 function ns.IndicatorMixin:Update()
-    if self.parentFrame.isPreviewFrame then return end
-
     local unit = self.parentFrame.unit
     local displayedUnit = self.parentFrame.displayedUnit
-
-    if unit and (string.match(unit, "target") or string.match(unit, "^nameplate") or string.match(unit, "pet")) then return end
 
     if self.lastUnit ~= unit then
         if self.lastUnit then
@@ -128,7 +124,7 @@ function ns.GetIndicator(frame)
     local indicator = frame.MissingBuffIndicator
 
     if not indicator then
-        if not UnitExists(frame.unit) then return nil end
+        if not frame.unit or not UnitExists(frame.unit) then return nil end
         indicator = ns.CreateIndicator(frame)
     end
 
