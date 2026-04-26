@@ -27,8 +27,7 @@ local function UpdateIndicator(frame)
 
     if unit and (string.match(unit, "target") or string.match(unit, "^nameplate") or string.match(unit, "pet")) then
         if frame.MissingBuffIndicator then
-            frame.MissingBuffIndicator:Hide()
-            frame.MissingBuffIndicator.isShown = false
+            frame.MissingBuffIndicator:SetVisibility(false)
         end
         return
     end

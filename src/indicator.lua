@@ -22,8 +22,15 @@ function ns.IndicatorMixin:OnLoad(parentFrame)
     tex:SetTexture(ns.displayTexture)
     tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
-    self.isShown = false
     self.isValid = false
+    self.isVisible = false
+    self:Hide()
+end
+
+function ns.IndicatorMixin:SetVisibility(visible)
+    if self.isVisible == visible then return end
+    self.isVisible = visible
+    self:SetShown(visible)
 end
 
 function ns.IndicatorMixin:GetSafeIconSize()
@@ -93,20 +100,12 @@ function ns.IndicatorMixin:Update()
     self.isValid = isValid
 
     if not isValid then
-        self:Hide()
-        self.isShown = false
+        self:SetVisibility(false)
         return
     end
 
     self:UpdateLayout()
-
-    if not hasBuff then
-        self:Show()
-        self.isShown = true
-    else
-        self:Hide()
-        self.isShown = false
-    end
+    self:SetVisibility(not hasBuff)
 end
 
 function ns.CreateIndicator(frame)
