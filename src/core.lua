@@ -4,13 +4,15 @@ local addonName, ns = ...
 local UnitExists = UnitExists
 local UnitIsDeadOrGhost = UnitIsDeadOrGhost
 local UnitCanAssist = UnitCanAssist
+local UnitIsConnected = UnitIsConnected
+local UnitIsVisible = UnitIsVisible
 local issecretvalue = issecretvalue or function() return false end
 
 ns.indicatorPool = {}
 ns.unitRegistry = {}
 
 function ns.IsUnitValid(unit)
-    return UnitExists(unit) and not UnitIsDeadOrGhost(unit) and UnitCanAssist("player", unit)
+    return UnitExists(unit) and UnitIsConnected(unit) and UnitIsVisible(unit) and not UnitIsDeadOrGhost(unit) and UnitCanAssist("player", unit)
 end
 
 function ns.UpdateSettings()
@@ -104,6 +106,7 @@ local function OnLoad(self, event)
     self:RegisterEvent("UNIT_AURA")
     self:RegisterEvent("GROUP_ROSTER_UPDATE")
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
+    self:RegisterEvent("UNIT_CONNECTION")
 end
 
 local loader = CreateFrame("Frame")
@@ -113,6 +116,14 @@ loader:SetScript("OnEvent", function(self, event, ...)
         OnLoad(self, event)
     elseif event == "UNIT_AURA" then
         OnUnitAura(...)
+    elseif event == "UNIT_CONNECTION" then
+        local unitTarget = ...
+        local registry = ns.unitRegistry[unitTarget]
+        if registry then
+            for indicator in pairs(registry) do
+                indicator:Update()
+            end
+        end
     else
         UpdateAllIndicators()
     end
