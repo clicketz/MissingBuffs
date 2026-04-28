@@ -40,6 +40,15 @@ local function UpdateIndicator(frame)
     end
 end
 
+local function UpdateIndicatorsForUnit(unitTarget)
+    local registry = ns.unitRegistry[unitTarget]
+    if registry then
+        for indicator in pairs(registry) do
+            indicator:Update()
+        end
+    end
+end
+
 local function OnUnitAura(unitTarget, updateInfo)
     local registry = ns.unitRegistry[unitTarget]
     if not registry then return end
@@ -107,6 +116,8 @@ local function OnLoad(self, event)
     self:RegisterEvent("GROUP_ROSTER_UPDATE")
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("UNIT_CONNECTION")
+    self:RegisterEvent("PARTY_MEMBER_DISABLE")
+    self:RegisterEvent("PARTY_MEMBER_ENABLE")
 end
 
 local loader = CreateFrame("Frame")
@@ -116,14 +127,8 @@ loader:SetScript("OnEvent", function(self, event, ...)
         OnLoad(self, event)
     elseif event == "UNIT_AURA" then
         OnUnitAura(...)
-    elseif event == "UNIT_CONNECTION" then
-        local unitTarget = ...
-        local registry = ns.unitRegistry[unitTarget]
-        if registry then
-            for indicator in pairs(registry) do
-                indicator:Update()
-            end
-        end
+    elseif event == "UNIT_CONNECTION" or event == "PARTY_MEMBER_DISABLE" or event == "PARTY_MEMBER_ENABLE" then
+        UpdateIndicatorsForUnit(...)
     else
         UpdateAllIndicators()
     end
