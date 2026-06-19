@@ -104,11 +104,13 @@ end
 local function OnLoad(self, event)
     ns.Config.InitDB()
 
-    if not ns.InitBuffTracking() then return end
+    local classIsTracked = ns.InitBuffTracking()
 
     ns.UpdateSettings()
     ns.SetupOptions()
     ns.SetupSlashHandler()
+
+    if not classIsTracked then return end
 
     hooksecurefunc("CompactUnitFrame_UpdateAll", UpdateIndicator)
 

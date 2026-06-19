@@ -134,10 +134,14 @@ function ns.InitBuffTracking()
     local playerClass = select(2, UnitClass("player"))
     local myBuffSpells = ns.RAID_BUFFS[playerClass]
 
-    if not myBuffSpells then return false end
-
-    ns.displayTexture = GetSpellTexture(myBuffSpells[1])
-    ns.allMyBuffSpells = {}
+    -- class isn't tracked, but still need to set up the preview frame / settings with a fallback texture
+    if not myBuffSpells then
+        ns.displayTexture = GetSpellTexture(264910)
+        return false
+    else
+        ns.displayTexture = GetSpellTexture(myBuffSpells[1])
+        ns.allMyBuffSpells = {}
+    end
 
     local buffList = myBuffSpells
 
