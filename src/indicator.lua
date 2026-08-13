@@ -4,7 +4,6 @@ local addonName, ns = ...
 local UnitExists = UnitExists
 local GetUnitAuraBySpellID = C_UnitAuras.GetUnitAuraBySpellID
 local GetSpellTexture = C_Spell.GetSpellTexture
-local issecretvalue = issecretvalue or function() return false end
 
 ns.IndicatorMixin = {}
 
@@ -90,11 +89,10 @@ function ns.IndicatorMixin:Update()
         self.lastDisplayedUnit = displayedUnit
     end
 
-    local hasBuff, auraInstanceID = false, nil
+    local hasBuff = false
     if UnitExists(unit) then
-        hasBuff, auraInstanceID = ns.UnitHasMyRaidBuff(unit)
+        hasBuff = ns.UnitHasMyRaidBuff(unit)
     end
-    self.auraInstanceID = auraInstanceID
 
     local isValid = ns.IsUnitValid(unit)
     self.isValid = isValid
@@ -160,10 +158,10 @@ function ns.InitBuffTracking()
         for i = 1, #buffList do
             local aura = GetUnitAuraBySpellID(unit, buffList[i])
             if aura then
-                return true, aura.auraInstanceID
+                return true
             end
         end
-        return false, nil
+        return false
     end
 
     return true

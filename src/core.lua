@@ -6,10 +6,13 @@ local UnitIsDeadOrGhost = UnitIsDeadOrGhost
 local UnitCanAssist = UnitCanAssist
 local UnitIsConnected = UnitIsConnected
 local UnitIsVisible = UnitIsVisible
-local issecretvalue = issecretvalue or function() return false end
+local next = next
 
 ns.indicatorPool = {}
 ns.unitRegistry = {}
+
+local dirtyUnits = {}
+local isUpdateQueued = false
 
 function ns.IsUnitValid(unit)
     return UnitExists(unit) and UnitIsConnected(unit) and UnitIsVisible(unit) and not UnitIsDeadOrGhost(unit) and UnitCanAssist("player", unit)
@@ -49,49 +52,31 @@ local function UpdateIndicatorsForUnit(unitTarget)
     end
 end
 
-local function OnUnitAura(unitTarget, updateInfo)
-    local registry = ns.unitRegistry[unitTarget]
-    if not registry then return end
+local function IsTrackedDisplayUnit(unit)
+    if not unit then return false end
+    return unit == "player" or string.match(unit, "^party%d+$") ~= nil or string.match(unit, "^raid%d+$") ~= nil
+end
 
-    local needsFullUpdate = not updateInfo or updateInfo.isFullUpdate
-
-    if not needsFullUpdate then
-        if updateInfo.addedAuras then
-            for _, aura in ipairs(updateInfo.addedAuras) do
-                if not issecretvalue(aura.spellId) and ns.allMyBuffSpells[aura.spellId] then
-                    needsFullUpdate = true
-                    break
-                end
-            end
-        end
-
-        if not needsFullUpdate and updateInfo.removedAuraInstanceIDs then
-            for _, auraInstanceID in ipairs(updateInfo.removedAuraInstanceIDs) do
-                for indicator in pairs(registry) do
-                    if indicator.auraInstanceID == auraInstanceID then
-                        needsFullUpdate = true
-                        break
-                    end
-                end
-                if needsFullUpdate then break end
-            end
-        end
-
-        if not needsFullUpdate then
-            local currentValid = ns.IsUnitValid(unitTarget)
-            for indicator in pairs(registry) do
-                if indicator.isValid ~= currentValid then
-                    needsFullUpdate = true
-                    break
-                end
-            end
+local function ProcessDirtyUnits()
+    if next(dirtyUnits) then
+        for unitTarget in pairs(dirtyUnits) do
+            UpdateIndicatorsForUnit(unitTarget)
+            dirtyUnits[unitTarget] = nil
         end
     end
+    isUpdateQueued = false
+end
 
-    if needsFullUpdate then
-        for indicator in pairs(registry) do
-            indicator:Update()
-        end
+local function OnUnitAura(unitTarget)
+    if not IsTrackedDisplayUnit(unitTarget) or not ns.unitRegistry[unitTarget] then
+        return
+    end
+
+    dirtyUnits[unitTarget] = true
+
+    if not isUpdateQueued then
+        isUpdateQueued = true
+        C_Timer.After(0.1, ProcessDirtyUnits)
     end
 end
 
